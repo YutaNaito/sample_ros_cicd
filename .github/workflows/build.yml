@@ -7,7 +7,7 @@ jobs:
     name: Build ROS package and send result to slack
     runs-on: ubuntu-18.04
     env:
-      CATKIN_WS=/home/runner/work/catkin_ws
+      CATKIN_WS: /home/runner/work/catkin_ws
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
