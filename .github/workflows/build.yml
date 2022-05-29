@@ -27,7 +27,7 @@ jobs:
           mkdir -p ${CATKIN_WS}/src
           ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
           echo "$GITHUB_WORKSPACE"
-      - name: pre build sample package
+      - name: pre build ros package
         run: |
           source /opt/ros/melodic/setup.bash
           cd ${CATKIN_WS}/src/sample_ros_cicd
@@ -35,11 +35,50 @@ jobs:
           rosdep update
           rosdep install -i -y --from-paths ./
           pwd
-      - name: build
+      - name: build ros package
         run: |
           source /opt/ros/melodic/setup.bash
           cd ${CATKIN_WS}
           echo 'start to build ros package'
-          BUILD_LOG=$(catkin build)
+          echo 'catkin build' >> BUILD_LOG
           echo "BUILD_LOG=$BUILD_LOG" >> $GITHUB_ENV
           echo "${{ env.BUILD_LOG }}"
+      - name: Send build result to slack workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.16.0
+        with:
+          payload: |
+            {
+              "text": ":github: ビルド結果: ${{ job.status }}\n\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":github: ビルド結果: ${{ job.status }}\n\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                  }
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "Author: <https://github.com/${{ github.event.sender.login }}|@${{ github.event.sender.login }}>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "elements": [
+                    {
+                      "type": "mrkdown",
+                      "text": "${{ env.BUILD_LOG }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
+
