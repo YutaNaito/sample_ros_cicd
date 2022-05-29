@@ -17,6 +17,8 @@ jobs:
           required-ros-distributions: melodic
       - name: Install catkin tool
         run: |
+          sudo apt-get -y update 
+          sudo apt-get -y upgrade
           sudo apt-get install python3-catkin-tools
           pwd
       - name: Init workspace
@@ -24,7 +26,7 @@ jobs:
           source /opt/ros/melodic/setup.bash
           mkdir -p ${CATKIN_WS}/src
           ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
-          echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
+          echo "$GITHUB_WORKSPACE"
       - name: pre build sample package
         run: |
           source /opt/ros/melodic/setup.bash
