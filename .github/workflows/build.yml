@@ -40,6 +40,6 @@ jobs:
           source /opt/ros/melodic/setup.bash
           cd ${CATKIN_WS}
           echo 'start to build ros package'
-          catkin build >> BUILD_LOG          
-          echo 'BUILD_LOG="$BUILD_LOG"' >> $GITHUB_ENV
+          BUILD_LOG=$(catkin build)
+          echo "BUILD_LOG=$BUILD_LOG" >> $GITHUB_ENV
           echo "${{ env.BUILD_LOG }}"
