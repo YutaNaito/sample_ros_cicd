@@ -36,6 +36,7 @@ jobs:
           rosdep install -i -y --from-paths ./
           pwd
       - name: build ros package
+        id: build_ros
         run: |
           source /opt/ros/melodic/setup.bash
           cd ${CATKIN_WS}
@@ -43,6 +44,7 @@ jobs:
           catkin build >> BUILD_LOG
           echo "BUILD_LOG=$BUILD_LOG" >> $GITHUB_ENV
           echo "${{ env.BUILD_LOG }}"
+          echo "::set-output name=build_log::${{ env.BUILD_LOG}}"
       - name: Send build result to slack workflow
         id: slack
         uses: slackapi/slack-github-action@v1.16.0
@@ -55,7 +57,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "ビルド結果: ${{ job.status }}\n\nURL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\n${{ env.BUILD_LOG }}"
+                    "text": "ビルド結果: ${{ job.status }}\n\nコミット: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\n${{ steps.build_ros.outputs.build_log }}"
                   }
                 },
                 {
