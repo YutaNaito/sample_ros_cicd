@@ -1,0 +1,40 @@
+name: ros build workflow
+
+on:
+  push:
+jobs:
+  build-ros:
+    name: Build ROS package and send result to slack
+    runs-on: ubuntu-18.04
+    env:
+      CATKIN_WS=/home/runner/work/catkin_ws
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Set up ROS
+        uses: ros-tooling/setup-ros@v0.2
+        with:
+          required-ros-distributions: melodic
+      - name: Install catkin tool
+        run: |
+          sudo apt-get install python3-catkin-tools
+          pwd
+      - name: Init workspace
+        run: |
+          source /opt/ros/melodic/setup.bash
+          mkdir -p ${CATKIN_WS}/src
+          ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
+      - name: pre build sample package
+        run: |
+          source /opt/ros/melodic/setup.bash
+          cd ${CATKIN_WS}/src/package
+          git submodule update --init --recursive
+          rosdep update
+          rosdep install -i -y --from-paths ./ 
+      - name: build
+        run: |
+          source /opt/ros/noetic/setup.bash
+          cd ${CATKIN_WS}
+          BUILD_LOG = catkin build
+          echo 'BUILD_LOG="$BUILD_LOG"' >> $GITHUB_ENV
+          echo "${{ env.BUILD_LOG }}"
