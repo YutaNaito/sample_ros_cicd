@@ -41,7 +41,7 @@ jobs:
           source /opt/ros/melodic/setup.bash
           cd ${CATKIN_WS}
           echo 'start to build ros package'
-          echo 'catkin build' >> build_log.txt
+          catkin build >> build_log.txt
           catkin_build_log=$(cat build_log.txt)
           catkin_build_log="${catkin_build_log//$'\n'/\\n}"
           echo "::set-output name=catkin_build_log::$catkin_build_log"          
