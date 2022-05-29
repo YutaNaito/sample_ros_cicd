@@ -24,17 +24,19 @@ jobs:
           source /opt/ros/melodic/setup.bash
           mkdir -p ${CATKIN_WS}/src
           ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
+          echo "GITHUB_WORKSPACE = ${{ GITHUB_WORKSPACE }}"
       - name: pre build sample package
         run: |
           source /opt/ros/melodic/setup.bash
-          cd ${CATKIN_WS}/src/package
+          cd ${CATKIN_WS}/src/sample_ros_cicd
           git submodule update --init --recursive
           rosdep update
           rosdep install -i -y --from-paths ./ 
       - name: build
         run: |
-          source /opt/ros/noetic/setup.bash
+          source /opt/ros/melodic/setup.bash
           cd ${CATKIN_WS}
-          BUILD_LOG = catkin build
+          echo 'start to build ros package'
+          catkin build >> BUILD_LOG
           echo 'BUILD_LOG="$BUILD_LOG"' >> $GITHUB_ENV
           echo "${{ env.BUILD_LOG }}"
