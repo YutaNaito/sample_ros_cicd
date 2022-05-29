@@ -40,7 +40,7 @@ jobs:
           source /opt/ros/melodic/setup.bash
           cd ${CATKIN_WS}
           echo 'start to build ros package'
-          echo 'catkin build' >> BUILD_LOG
+          catkin build >> BUILD_LOG
           echo "BUILD_LOG=$BUILD_LOG" >> $GITHUB_ENV
           echo "${{ env.BUILD_LOG }}"
       - name: Send build result to slack workflow
@@ -55,7 +55,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "ビルド結果: ${{ job.status }}\n\nURL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\nブランチ: $GITHUB_REF\n\n${{ env.BUILD_LOG }}"
+                    "text": "ビルド結果: ${{ job.status }}\n\nURL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\n${{ env.BUILD_LOG }}"
                   }
                 },
                 {
