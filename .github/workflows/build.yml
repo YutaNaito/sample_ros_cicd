@@ -42,7 +42,7 @@ jobs:
           cd ${CATKIN_WS}
           echo 'start to build ros package'
           catkin build >> build_log.txt
-          BUILD_LOG=$(<build_log.txt)
+          BUILD_LOG=$(cat build_log.txt)
           echo "BUILD_LOG=$BUILD_LOG" >> $GITHUB_ENV
           echo "${{ env.BUILD_LOG }}"
       - name: Send build result to slack workflow
