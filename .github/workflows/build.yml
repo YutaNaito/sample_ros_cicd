@@ -20,13 +20,11 @@ jobs:
           sudo apt-get -y update 
           sudo apt-get -y upgrade
           sudo apt-get install python3-catkin-tools
-          pwd
       - name: Init workspace
         run: |
           source /opt/ros/melodic/setup.bash
           mkdir -p ${CATKIN_WS}/src
           ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
-          echo "$GITHUB_WORKSPACE"
       - name: pre build ros package
         run: |
           source /opt/ros/melodic/setup.bash
@@ -34,7 +32,6 @@ jobs:
           git submodule update --init --recursive
           rosdep update
           rosdep install -i -y --from-paths ./
-          pwd
       - name: build ros package
         id: build_ros
         run: |
@@ -42,7 +39,7 @@ jobs:
           cd ${CATKIN_WS}
           echo 'start to build ros package'
           catkin build >> build_log.txt
-          catkin_build_log=$(cat build_log.txt)
+          catkin_build_log=$(tail -n 6 build_log.txt)
           catkin_build_log="${catkin_build_log//$'\n'/\\n}"
           echo "::set-output name=catkin_build_log::$catkin_build_log"          
           echo 'complete to build ros'
@@ -58,7 +55,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "ビルド結果: ${{ job.status }}\n\nコミット: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\n${{ steps.build_ros.outputs.catkin_build_log }}"
+                    "text": "ビルド結果: ${{ job.status }}\n\nコミット: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\n```${{ steps.build_ros.outputs.catkin_build_log }}```"
                   }
                 },
                 {
