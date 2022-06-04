@@ -47,7 +47,6 @@ jobs:
           echo 'start to build ros package'
           catkin build >> build_log.txt
           catkin_build_log=$(tail -n 6 build_log.txt)
-          catkin_build_log="${catkin_build_log//$'\n'/\\n}"
           echo "::set-output name=catkin_build_log::$catkin_build_log"          
           echo 'complete to build ros'
           pwd
