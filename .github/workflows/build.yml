@@ -2,14 +2,14 @@ name: 'ros build workflow'
 
 on:
   push:
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
 jobs:
   build-ros:
     name: 'Build ROS package and send result to slack'
     env: 
       CATKIN_WS: /root/catkin_ws
-    runs:
-      using: 'docker'
-      image: 'Dockerfile'
     steps:
       - name: build ros package
         id: build_ros
