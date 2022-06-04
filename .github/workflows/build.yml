@@ -21,6 +21,7 @@ jobs:
           sudo apt-get -y upgrade
           sudo apt-get install python3-catkin-tools
           pwd
+          ls -la
       - name: Init workspace
         run: |
           source /opt/ros/melodic/setup.bash
@@ -28,6 +29,7 @@ jobs:
           ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
           echo "$GITHUB_WORKSPACE"
           pwd
+          ls -la
       - name: pre build ros package
         run: |
           source /opt/ros/melodic/setup.bash
@@ -36,6 +38,7 @@ jobs:
           rosdep update
           rosdep install -i -y --from-paths ./
           pwd
+          ls -la
       - name: build ros package
         id: build_ros
         run: |
@@ -48,10 +51,12 @@ jobs:
           echo "::set-output name=catkin_build_log::$catkin_build_log"          
           echo 'complete to build ros'
           pwd
+          ls -la
       - name: send to slack
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_MESSAGE: "${{ steps.build_ros.outputs.catkin_build_log }}"
+          SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
       # - name: Send build result to slack workflow
       #   id: slack
       #   uses: slackapi/slack-github-action@v1.16.0
