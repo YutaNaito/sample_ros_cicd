@@ -1,37 +1,15 @@
-name: ros build workflow
+name: 'ros build workflow'
 
 on:
   push:
 jobs:
   build-ros:
-    name: Build ROS package and send result to slack
-    runs-on: ubuntu-18.04
-    env:
-      CATKIN_WS: /home/runner/work/catkin_ws
+    name: 'Build ROS package and send result to slack'
+    env: 
+      CATKIN_WS: /root/catkin_ws
+    using: 'docker'
+    image: 'Dockerfile'
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
-      - name: Set up ROS
-        uses: ros-tooling/setup-ros@v0.2
-        with:
-          required-ros-distributions: melodic
-      - name: Install catkin tool
-        run: |
-          sudo apt-get -y update 
-          sudo apt-get -y upgrade
-          sudo apt-get install python3-catkin-tools
-      - name: Init workspace
-        run: |
-          source /opt/ros/melodic/setup.bash
-          mkdir -p ${CATKIN_WS}/src
-          ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
-      - name: pre build ros package
-        run: |
-          source /opt/ros/melodic/setup.bash
-          cd ${CATKIN_WS}/src/sample_ros_cicd
-          git submodule update --init --recursive
-          rosdep update
-          rosdep install -i -y --from-paths ./
       - name: build ros package
         id: build_ros
         run: |
@@ -43,33 +21,74 @@ jobs:
           catkin_build_log="${catkin_build_log//$'\n'/\\n}"
           echo "::set-output name=catkin_build_log::$catkin_build_log"          
           echo 'complete to build ros'
-      - name: Send build result to slack workflow
-        id: slack
-        uses: slackapi/slack-github-action@v1.16.0
-        with:
-          payload: |
-            {
-              "text": "ビルド結果: ${{ job.status }}\n\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "ビルド結果: ${{ job.status }}\n\nコミット: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\n```${{ steps.build_ros.outputs.catkin_build_log }}```"
-                  }
-                },
-                {
-                  "type": "context",
-                  "elements": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "Author: <https://github.com/${{ github.event.sender.login }}|@${{ github.event.sender.login }}>"
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
+
+  # build-ros:
+  #   name: Build ROS package and send result to slack
+  #   runs-on: ubuntu-18.04
+  #   env:
+  #     CATKIN_WS: /home/runner/work/catkin_ws
+  #   steps:
+  #     - name: Check out the repo
+  #       uses: actions/checkout@v2
+  #     - name: Set up ROS
+  #       uses: ros-tooling/setup-ros@v0.2
+  #       with:
+  #         required-ros-distributions: melodic
+  #     - name: Install catkin tool
+  #       run: |
+  #         sudo apt-get -y update 
+  #         sudo apt-get -y upgrade
+  #         sudo apt-get install python3-catkin-tools
+  #     - name: Init workspace
+  #       run: |
+  #         source /opt/ros/melodic/setup.bash
+  #         mkdir -p ${CATKIN_WS}/src
+  #         ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
+  #     - name: pre build ros package
+  #       run: |
+  #         source /opt/ros/melodic/setup.bash
+  #         cd ${CATKIN_WS}/src/sample_ros_cicd
+  #         git submodule update --init --recursive
+  #         rosdep update
+  #         rosdep install -i -y --from-paths ./
+  #     - name: build ros package
+  #       id: build_ros
+  #       run: |
+  #         source /opt/ros/melodic/setup.bash
+  #         cd ${CATKIN_WS}
+  #         echo 'start to build ros package'
+  #         catkin build >> build_log.txt
+  #         catkin_build_log=$(tail -n 6 build_log.txt)
+  #         catkin_build_log="${catkin_build_log//$'\n'/\\n}"
+  #         echo "::set-output name=catkin_build_log::$catkin_build_log"          
+  #         echo 'complete to build ros'
+  #     - name: Send build result to slack workflow
+  #       id: slack
+  #       uses: slackapi/slack-github-action@v1.16.0
+  #       with:
+  #         payload: |
+  #           {
+  #             "text": "ビルド結果: ${{ job.status }}\n\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+  #             "blocks": [
+  #               {
+  #                 "type": "section",
+  #                 "text": {
+  #                   "type": "mrkdwn",
+  #                   "text": "ビルド結果: ${{ job.status }}\n\nコミット: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\n```${{ steps.build_ros.outputs.catkin_build_log }}```"
+  #                 }
+  #               },
+  #               {
+  #                 "type": "context",
+  #                 "elements": [
+  #                   {
+  #                     "type": "mrkdwn",
+  #                     "text": "Author: <https://github.com/${{ github.event.sender.login }}|@${{ github.event.sender.login }}>"
+  #                   }
+  #                 ]
+  #               }
+  #             ]
+  #           }
+  #       env:
+  #         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+  #         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
 
