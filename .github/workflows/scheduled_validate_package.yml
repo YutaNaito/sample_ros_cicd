@@ -1,4 +1,4 @@
-name: 'ros build workflow'
+name: 'check ros scheduled workflow'
 
 on:
   schedule:
