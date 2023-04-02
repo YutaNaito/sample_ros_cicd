@@ -1,0 +1,63 @@
+name: 'ros build workflow'
+
+on:
+  schedule:
+    # 毎週月曜の午前8時に実行する
+    - cron: '0 8 * * 1'
+  
+jobs:
+  build-ros:
+    name: Build ROS package and send result to slack
+    runs-on: ubuntu-18.04
+    env:
+      CATKIN_WS: /home/runner/work/catkin_ws
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Set up ROS
+        uses: ros-tooling/setup-ros@v0.2
+        with:
+          required-ros-distributions: melodic
+      - name: Install catkin tool
+        run: |
+          sudo apt-get -y update 
+          sudo apt-get -y upgrade
+          sudo apt-get install python3-catkin-tools
+          pwd
+          ls -la
+      - name: Init workspace
+        run: |
+          source /opt/ros/melodic/setup.bash
+          mkdir -p ${CATKIN_WS}/src
+          ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
+          echo "$GITHUB_WORKSPACE"
+          pwd
+          ls -la
+      - name: pre build ros package
+        run: |
+          source /opt/ros/melodic/setup.bash
+          cd ${CATKIN_WS}/src/sample_ros_cicd
+          git submodule update --init --recursive
+          rosdep update
+          rosdep install -i -y --from-paths ./
+          pwd
+          ls -la
+      - name: build ros package
+        id: build_ros
+        run: |
+          source /opt/ros/melodic/setup.bash
+          cd ${CATKIN_WS}
+          echo 'start to build ros package'
+          catkin build >> build_log.txt
+          catkin_build_log=$(tail -n 6 build_log.txt)
+          echo "::set-output name=catkin_build_log::$catkin_build_log"          
+          echo 'complete to build ros'
+          pwd
+          ls -la
+      - name: send to slack
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_TITLE: 'Scheduled check ROS package'
+          SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
+
