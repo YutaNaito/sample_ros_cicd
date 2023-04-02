@@ -54,10 +54,19 @@ jobs:
           echo 'complete to build ros'
           pwd
           ls -la
-      - name: send to slack
+      - name: send to slack on success
         uses: rtCamp/action-slack-notify@v2
+        if: ${{ success() }}
         env:
-          SLACK_TITLE: 'Scheduled check ROS package'
+          SLACK_COLOR: good
+          SLACK_TITLE: 'Success to build ros package'
           SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
-
+      - name: send to slack on failure
+        uses: rtCamp/action-slack-notify@v2
+        if: ${{ failure() }}
+        env:
+          SLACK_COLOR: danger
+          SLACK_TITLE: 'Failed to build ros package'
+          SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
