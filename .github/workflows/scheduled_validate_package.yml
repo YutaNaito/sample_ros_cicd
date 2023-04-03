@@ -1,7 +1,10 @@
-name: 'ros build workflow'
+name: 'check ros scheduled workflow'
 
 on:
-  push:
+  schedule:
+    # 毎週月曜の午前8時に実行する
+    - cron: '0 8 * * 1'
+  
 jobs:
   build-ros:
     name: Build ROS package and send result to slack
@@ -67,33 +70,3 @@ jobs:
           SLACK_TITLE: 'Failed to build ros package'
           SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
-      # - name: Send build result to slack workflow
-      #   id: slack
-      #   uses: slackapi/slack-github-action@v1.16.0
-      #   with:
-      #     payload: |
-      #       {
-      #         "text": "ビルド結果: ${{ job.status }}\n\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
-      #         "blocks": [
-      #           {
-      #             "type": "section",
-      #             "text": {
-      #               "type": "mrkdwn",
-      #               "text": "ビルド結果: ${{ job.status }}\n\nコミット: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n\n```${{ steps.build_ros.outputs.catkin_build_log }}```"
-      #             }
-      #           },
-      #           {
-      #             "type": "context",
-      #             "elements": [
-      #               {
-      #                 "type": "mrkdwn",
-      #                 "text": "Author: <https://github.com/${{ github.event.sender.login }}|@${{ github.event.sender.login }}>"
-      #               }
-      #             ]
-      #           }
-      #         ]
-      #       }
-      #   env:
-      #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
-
