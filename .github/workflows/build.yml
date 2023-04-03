@@ -5,7 +5,7 @@ on:
 jobs:
   build-ros:
     name: Build ROS package and send result to slack
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CATKIN_WS: /home/runner/work/catkin_ws
     steps:
@@ -14,7 +14,7 @@ jobs:
       - name: Set up ROS
         uses: ros-tooling/setup-ros@v0.2
         with:
-          required-ros-distributions: melodic
+          required-ros-distributions: noetic
       - name: Install catkin tool
         run: |
           sudo apt-get -y update 
@@ -24,7 +24,7 @@ jobs:
           ls -la
       - name: Init workspace
         run: |
-          source /opt/ros/melodic/setup.bash
+          source /opt/ros/noetic/setup.bash
           mkdir -p ${CATKIN_WS}/src
           ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
           echo "$GITHUB_WORKSPACE"
@@ -32,7 +32,7 @@ jobs:
           ls -la
       - name: pre build ros package
         run: |
-          source /opt/ros/melodic/setup.bash
+          source /opt/ros/noetic/setup.bash
           cd ${CATKIN_WS}/src/sample_ros_cicd
           git submodule update --init --recursive
           rosdep update
@@ -42,7 +42,7 @@ jobs:
       - name: build ros package
         id: build_ros
         run: |
-          source /opt/ros/melodic/setup.bash
+          source /opt/ros/noetic/setup.bash
           cd ${CATKIN_WS}
           echo 'start to build ros package'
           catkin build >> build_log.txt
