@@ -47,13 +47,13 @@ jobs:
           echo 'start to build ros package'
           catkin build >> build_log.txt
           catkin_build_log=$(tail -n 6 build_log.txt)
-          catkin_build_result=$(grep 'Failed: No packages failed' build_log.txt)
+          catkin_build_result=$(grep 'No packages failed' build_log.txt)
           echo "::set-output name=catkin_build_log::$catkin_build_log"
           echo "::set-output name=catkin_build_result::$catkin_build_result"
           pwd
           ls -la
       - name: send to slack on success
-        if: steps.build_ros.outputs.catkin_build_result == 'Failed: No packages failed'
+        if: steps.build_ros.outputs.catkin_build_result == 'No packages failed'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: good
@@ -61,7 +61,7 @@ jobs:
           SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
       - name: send to slack on failure
-        if: steps.build_ros.outputs.catkin_build_result != 'Failed: No packages failed'
+        if: steps.build_ros.outputs.catkin_build_result != 'No packages failed'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: danger
