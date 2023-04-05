@@ -20,16 +20,12 @@ jobs:
           sudo apt-get -y update 
           sudo apt-get -y upgrade
           sudo apt-get install python3-catkin-tools
-          pwd
-          ls -la
       - name: Init workspace
         run: |
           source /opt/ros/noetic/setup.bash
           mkdir -p ${CATKIN_WS}/src
           ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
           echo "$GITHUB_WORKSPACE"
-          pwd
-          ls -la
       - name: pre build ros package
         run: |
           source /opt/ros/noetic/setup.bash
@@ -37,8 +33,6 @@ jobs:
           git submodule update --init --recursive
           rosdep update
           rosdep install -i -y --from-paths ./
-          pwd
-          ls -la
       - name: build ros package
         id: build_ros
         run: |
@@ -47,26 +41,24 @@ jobs:
           echo 'start to build ros package'
           catkin build >> build_log.txt
           catkin_build_log=$(tail -n 6 build_log.txt)
-          catkin_build_result=$(grep 'No packages failed' build_log.txt)
-          echo "::set-output name=catkin_build_log::$catkin_build_log"
-          echo "::set-output name=catkin_build_result::$catkin_build_result"
-          pwd
-          ls -la
+          catkin_build_result=$(grep 'No\spackages\sfailed' build_log.txt | wc -l)
+          echo catkin_build_log=$catkin_build_log >> $GITHUB_OUTPUT
+          echo catkin_build_result=$catkin_build_result >> $GITHUB_OUTPUT
       - name: send to slack on success
-        if: steps.build_ros.outputs.catkin_build_result == 'No packages failed'
+        if: ${{ steps.build_ros.outputs.catkin_build_result == 1}}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: good
-          SLACK_TITLE: 'Success to build ros package'
-          SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
+          SLACK_TITLE: 'build ros package'
+          SLACK_MESSAGE: 'Success!'
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
       - name: send to slack on failure
-        if: steps.build_ros.outputs.catkin_build_result != 'No packages failed'
+        if: ${{ steps.build_ros.outputs.catkin_build_result == 0 }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: danger
-          SLACK_TITLE: 'Failed to build ros package'
-          SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
+          SLACK_TITLE: 'build ros package'
+          SLACK_MESSAGE: 'Failure!'
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
       # - name: Send build result to slack workflow
       #   id: slack
@@ -97,4 +89,3 @@ jobs:
       #   env:
       #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
       #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
-

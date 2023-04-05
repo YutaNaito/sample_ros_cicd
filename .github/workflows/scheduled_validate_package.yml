@@ -4,11 +4,10 @@ on:
   schedule:
     # 毎週月曜の午前8時に実行する
     - cron: '0 8 * * 1'
-  
 jobs:
   build-ros:
     name: Build ROS package and send result to slack
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CATKIN_WS: /home/runner/work/catkin_ws
     steps:
@@ -17,56 +16,49 @@ jobs:
       - name: Set up ROS
         uses: ros-tooling/setup-ros@v0.2
         with:
-          required-ros-distributions: melodic
+          required-ros-distributions: noetic
       - name: Install catkin tool
         run: |
           sudo apt-get -y update 
           sudo apt-get -y upgrade
           sudo apt-get install python3-catkin-tools
-          pwd
-          ls -la
       - name: Init workspace
         run: |
-          source /opt/ros/melodic/setup.bash
+          source /opt/ros/noetic/setup.bash
           mkdir -p ${CATKIN_WS}/src
           ln -s ${GITHUB_WORKSPACE} ${CATKIN_WS}/src/
           echo "$GITHUB_WORKSPACE"
-          pwd
-          ls -la
       - name: pre build ros package
         run: |
-          source /opt/ros/melodic/setup.bash
+          source /opt/ros/noetic/setup.bash
           cd ${CATKIN_WS}/src/sample_ros_cicd
           git submodule update --init --recursive
           rosdep update
           rosdep install -i -y --from-paths ./
-          pwd
-          ls -la
       - name: build ros package
         id: build_ros
         run: |
-          source /opt/ros/melodic/setup.bash
+          source /opt/ros/noetic/setup.bash
           cd ${CATKIN_WS}
           echo 'start to build ros package'
           catkin build >> build_log.txt
           catkin_build_log=$(tail -n 6 build_log.txt)
-          echo "::set-output name=catkin_build_log::$catkin_build_log"          
-          echo 'complete to build ros'
-          pwd
-          ls -la
+          catkin_build_result=$(grep 'No\spackages\sfailed' build_log.txt | wc -l)
+          echo catkin_build_log=$catkin_build_log >> $GITHUB_OUTPUT
+          echo catkin_build_result=$catkin_build_result >> $GITHUB_OUTPUT
       - name: send to slack on success
+        if: ${{ steps.build_ros.outputs.catkin_build_result == 1}}
         uses: rtCamp/action-slack-notify@v2
-        if: ${{ success() }}
         env:
           SLACK_COLOR: good
-          SLACK_TITLE: 'Success to build ros package'
-          SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
+          SLACK_TITLE: 'Scheduled check ros package'
+          SLACK_MESSAGE: 'Success!'
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
       - name: send to slack on failure
+        if: ${{ steps.build_ros.outputs.catkin_build_result == 0 }}
         uses: rtCamp/action-slack-notify@v2
-        if: ${{ failure() }}
         env:
           SLACK_COLOR: danger
-          SLACK_TITLE: 'Failed to build ros package'
-          SLACK_MESSAGE: ${{ steps.build_ros.outputs.catkin_build_log }}
+          SLACK_TITLE: 'Scheduled check ros package'
+          SLACK_MESSAGE: 'Failure! Please fix!'
           SLACK_WEBHOOK: ${{ secrets.SLACK_INCOMING_WEBHOOK_URL }}
